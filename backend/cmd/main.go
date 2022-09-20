@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"toDoList/pkg/handlers"
@@ -11,12 +10,12 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello")
 
 	r := mux.NewRouter()
 
 	postsRepo := posts.NewMemoryRepo()
 	postsRepo.Data, _ = posts.AddStaticPosts()
+	postsRepo.ID = 3
 
 	postHandler := handlers.PostHandler{
 		PostsRepo: postsRepo,
@@ -27,8 +26,10 @@ func main() {
 		http.StripPrefix("/static/",
 			http.FileServer(http.Dir("../../static/"))))
 
-	r.HandleFunc("/GetAllPosts", postHandler.SendAllPosts).Methods("GET")
-	r.HandleFunc("/AddPost", postHandler.SendAllPosts).Methods("GET")
+	r.HandleFunc("/api/posts", postHandler.SendAllPosts).Methods("GET")
+	r.HandleFunc("/api/post", postHandler.AddPost).Methods("POST")
+	r.HandleFunc("/api/post/{POST_ID}", postHandler.DeletePost).Methods("DELETE")
+	r.HandleFunc("/api/post/{POST_ID}", postHandler.ChangePost).Methods("POST")
 
 	addr := ":8080"
 	log.Println("server starting on addr", addr)

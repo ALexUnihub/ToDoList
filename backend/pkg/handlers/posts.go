@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"toDoList/pkg/posts"
+	// "toDoList/pkg/posts"
 )
 
 type PostHandler struct {
@@ -56,17 +58,54 @@ func (h *PostHandler) SendAllPosts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PostHandler) AddPost(w http.ResponseWriter, r *http.Request) {
+	newPost, err := h.PostsRepo.AddPostRepo(r)
+	if err != nil {
+		log.Println("package handlers, AddPost, AddPostRepo, err: ", err.Error())
+		return
+	}
 
-	// body, _ := ioutil.ReadAll(r.Body)
-	// r.Body.Close()
+	byteValue, err := json.Marshal(newPost)
+	if err != nil {
+		log.Println("package handlers, AddPost, Marshal, err: ", err.Error())
+		return
+	}
 
-	// post := &posts.Post{}
-	// err := json.Unmarshal(body, post)
+	_, err = w.Write(byteValue)
+	if err != nil {
+		log.Println("package handlers, AddPost, Write, err: ", err.Error())
+		return
+	}
+}
+func (h *PostHandler) DeletePost(w http.ResponseWriter, r *http.Request) {
+	postID := r.URL.Path
+	postID = postID[len("/api/post/"):]
 
-	// if err != nil {
-	// 	log.Println("package handlers, AddPost, Unmarshal, err: ", err.Error())
-	// 	return
-	// }
+	ID, err := strconv.Atoi(postID)
+	if err != nil {
+		log.Println("package handlers, DeletePost, Atoi, err: ", err.Error())
+		return
+	}
 
-	// _, err = h.PostsRepo.AddPost(post)
+	err = h.PostsRepo.DeletePostFromRepo(ID)
+	if err != nil {
+		log.Println("package handlers, DeletePost, DeletePostFromRepo, err: ", err.Error())
+		return
+	}
+}
+
+func (h *PostHandler) ChangePost(w http.ResponseWriter, r *http.Request) {
+	postID := r.URL.Path
+	postID = postID[len("/api/post/"):]
+
+	ID, err := strconv.Atoi(postID)
+	if err != nil {
+		log.Println("package handlers, ChangePost, Atoi, err: ", err.Error())
+		return
+	}
+
+	_, err = h.PostsRepo.ChangePostInRepo(ID, r)
+	if err != nil {
+		log.Println("package handlers, ChangePost, ChangePostInRepo, err: ", err.Error())
+		return
+	}
 }

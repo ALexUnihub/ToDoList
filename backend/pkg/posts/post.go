@@ -1,7 +1,9 @@
 package posts
 
+import "net/http"
+
 type Post struct {
-	Number int    `json:"Number"`
+	ID     int    `json:"ID"`
 	Title  string `json:"Title"`
 	Text   string `json:"Text"`
 	IsDone bool   `json:"IsDone"`
@@ -9,5 +11,7 @@ type Post struct {
 
 type PostsRepo interface {
 	GetAllPosts() ([]*Post, error)
-	AddPost(newPost *Post) (*Post, error)
+	AddPostRepo(r *http.Request) (*Post, error)
+	DeletePostFromRepo(postID int) error
+	ChangePostInRepo(postID int, r *http.Request) (*Post, error)
 }

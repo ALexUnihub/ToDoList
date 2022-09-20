@@ -1,6 +1,7 @@
 'use strict';
 
+console.log('post');
 
-function createElement(obj) {
+// function createElement(obj) {
   
-}
+// }
