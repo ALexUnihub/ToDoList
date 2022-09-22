@@ -18,7 +18,7 @@ type PostHandler struct {
 func (h *PostHandler) Index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 
-	dataHTML, err := os.Open("../../static/index.html")
+	dataHTML, err := os.Open("../../static/build/index.html")
 	if err != nil {
 		http.Error(w, `Template errror`, http.StatusInternalServerError)
 		return

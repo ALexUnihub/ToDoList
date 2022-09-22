@@ -22,9 +22,15 @@ func main() {
 	}
 
 	r.HandleFunc("/", postHandler.Index).Methods("GET")
-	r.PathPrefix("/static/").Handler(
-		http.StripPrefix("/static/",
-			http.FileServer(http.Dir("../../static/"))))
+	r.PathPrefix("/static/js/").Handler(
+		http.StripPrefix("/static/js/",
+			http.FileServer(http.Dir("../../static/build/static/js"))))
+	r.PathPrefix("/static/css/").Handler(
+		http.StripPrefix("/static/css/",
+			http.FileServer(http.Dir("../../static/build/static/css"))))
+	r.PathPrefix("/manifest.json").Handler(
+		http.StripPrefix("/manifest.json",
+			http.FileServer(http.Dir("../../static/build"))))
 
 	r.HandleFunc("/api/posts", postHandler.SendAllPosts).Methods("GET")
 	r.HandleFunc("/api/post", postHandler.AddPost).Methods("POST")
