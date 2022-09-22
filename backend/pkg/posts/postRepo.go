@@ -102,19 +102,19 @@ func AddStaticPosts() ([]*Post, error) {
 	post1 := &Post{
 		ID:     0,
 		Title:  "Title_1",
-		Text:   "text_1",
+		Text:   "text_1_server",
 		IsDone: true,
 	}
 	post2 := &Post{
 		ID:     1,
 		Title:  "Title_2",
-		Text:   "text_2",
+		Text:   "text_2_server",
 		IsDone: false,
 	}
 	post3 := &Post{
 		ID:     2,
 		Title:  "Title_3",
-		Text:   "text_3",
+		Text:   "text_3_server",
 		IsDone: true,
 	}
 	posts := []*Post{}
