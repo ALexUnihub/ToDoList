@@ -44,7 +44,9 @@ func (repo *ItemMemoryRepository) GetAllPosts() ([]*Post, error) {
 		return nil, err
 	}
 
-	log.Println("Get all posts")
+	repo.ID = posts[len(posts)-1].ID
+
+	log.Println("Get all posts, repo ID", repo.ID)
 	return posts, nil
 }
 
@@ -133,34 +135,59 @@ func (repo *ItemMemoryRepository) ChangePostInRepo(postID int, r *http.Request) 
 }
 
 func AddStaticPostsDB(collection *mgo.Collection, sess *mgo.Session) ([]*Post, error) {
-	post1 := &Post{
-		ID:     0,
-		Title:  "Title_1",
-		Text:   "text_1_server",
-		IsDone: true,
-	}
-	post2 := &Post{
-		ID:     1,
-		Title:  "Title_2",
-		Text:   "text_2_server",
-		IsDone: false,
-	}
-	post3 := &Post{
-		ID:     2,
-		Title:  "Title_3",
-		Text:   "text_3_server",
-		IsDone: true,
-	}
-	posts := []*Post{}
-	posts = append(posts, post1, post2, post3)
+	// post1 := &Post{
+	// 	ID:     0,
+	// 	Title:  "Title_1",
+	// 	Text:   "text_1_server",
+	// 	IsDone: true,
+	// }
+	// post2 := &Post{
+	// 	ID:     1,
+	// 	Title:  "Title_2",
+	// 	Text:   "text_2_server",
+	// 	IsDone: false,
+	// }
+	// post3 := &Post{
+	// 	ID:     2,
+	// 	Title:  "Title_3",
+	// 	Text:   "text_3_server",
+	// 	IsDone: true,
+	// }
+	// posts := []*Post{}
+	// posts = append(posts, post1, post2, post3)
 
-	post1.IDBson = bson.NewObjectId()
-	post2.IDBson = bson.NewObjectId()
-	post3.IDBson = bson.NewObjectId()
+	// post1.IDBson = bson.NewObjectId()
+	// post2.IDBson = bson.NewObjectId()
+	// post3.IDBson = bson.NewObjectId()
 
-	collection.Insert(&post1)
-	collection.Insert(&post2)
-	collection.Insert(&post3)
+	// collection.Insert(&post1)
+	// collection.Insert(&post2)
+	// collection.Insert(&post3)
+	if n, _ := collection.Count(); n == 0 {
+		collection.Insert(&Post{
+			IDBson: bson.NewObjectId(),
+			ID:     0,
+			Title:  "Title_1",
+			Text:   "text_1_server",
+			IsDone: true,
+		})
 
-	return posts, nil
+		collection.Insert(&Post{
+			IDBson: bson.NewObjectId(),
+			ID:     1,
+			Title:  "Title_2",
+			Text:   "text_2_server",
+			IsDone: true,
+		})
+
+		collection.Insert(&Post{
+			IDBson: bson.NewObjectId(),
+			ID:     3,
+			Title:  "Title_3",
+			Text:   "text_3_server",
+			IsDone: true,
+		})
+	}
+
+	return nil, nil
 }
