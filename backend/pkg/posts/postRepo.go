@@ -5,16 +5,27 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 type ItemMemoryRepository struct {
-	ID   int
-	Data []*Post
+	ID        int
+	Data      []*Post
+	DataDB    *mgo.Collection
+	SessionDB *mgo.Session
 }
 
-func NewMemoryRepo() *ItemMemoryRepository {
+func NewMemoryRepo(sess *mgo.Session) *ItemMemoryRepository {
+	collection := sess.DB("posts").C("postRepo")
+
+	AddStaticPostsDB(collection, sess)
+
 	return &ItemMemoryRepository{
-		ID: 0,
+		ID:        0,
+		DataDB:    collection,
+		SessionDB: sess,
 	}
 }
 
@@ -25,8 +36,16 @@ type MyPostForm struct {
 }
 
 func (repo *ItemMemoryRepository) GetAllPosts() ([]*Post, error) {
+
+	posts := []*Post{}
+	err := repo.DataDB.Find(bson.M{}).All(&posts)
+	if err != nil {
+		log.Println("package posts, GetAllPosts, Find, err: ", err.Error())
+		return nil, err
+	}
+
 	log.Println("Get all posts")
-	return repo.Data, nil
+	return posts, nil
 }
 
 func (repo *ItemMemoryRepository) AddPostRepo(r *http.Request) (*Post, error) {
@@ -37,7 +56,7 @@ func (repo *ItemMemoryRepository) AddPostRepo(r *http.Request) (*Post, error) {
 	err := json.Unmarshal(body, postData)
 
 	if err != nil {
-		log.Println("package handlers, AddPost, Unmarshal, err: ", err.Error())
+		log.Println("package posts, AddPost, Unmarshal, err: ", err.Error())
 		return nil, err
 	}
 
@@ -47,23 +66,27 @@ func (repo *ItemMemoryRepository) AddPostRepo(r *http.Request) (*Post, error) {
 		Text:   postData.Text,
 		IsDone: false,
 	}
-	repo.Data = append(repo.Data, newPost)
+
+	// insert in MongoDB
+	newPost.IDBson = bson.NewObjectId()
+	err = repo.DataDB.Insert(&newPost)
+	if err != nil {
+		log.Println("package posts, AddPostRepo, Insert, err: ", err.Error())
+		return nil, err
+	}
+	//
+
 	repo.ID++
+	log.Println("new post added to repo, post", newPost)
 
-	log.Println("new post added to repo, post", repo.Data[len(repo.Data)-1])
-
-	return repo.Data[len(repo.Data)-1], nil
+	return newPost, nil
 }
 
 func (repo *ItemMemoryRepository) DeletePostFromRepo(postID int) error {
-
-	for idx, item := range repo.Data {
-		if item.ID == postID {
-			copy(repo.Data[idx:], repo.Data[idx+1:])
-			repo.Data[len(repo.Data)-1] = &Post{}
-			repo.Data = repo.Data[:len(repo.Data)-1]
-			break
-		}
+	err := repo.DataDB.Remove(bson.M{"ID": postID})
+	if err != nil {
+		log.Println("package posts, DeletePostFromRepo, Remove, err: ", err.Error())
+		return err
 	}
 
 	log.Println("Post deleted from repo, postID,", postID)
@@ -79,26 +102,37 @@ func (repo *ItemMemoryRepository) ChangePostInRepo(postID int, r *http.Request) 
 	err := json.Unmarshal(body, postData)
 
 	if err != nil {
-		log.Println("package handlers, AddPost, Unmarshal, err: ", err.Error())
+		log.Println("package posts, ChangePostInRepo, Unmarshal, err: ", err.Error())
 		return nil, err
 	}
 
-	for _, item := range repo.Data {
-		if item.ID == postID {
-			tmpPost := item
-
-			item.Title = postData.Title
-			item.Text = postData.Text
-			item.IsDone = postData.IsDone
-
-			log.Printf("post was changed: before:\t%v\tafter:\t%v", tmpPost, item)
-			return item, nil
-		}
+	changedPost := &Post{
+		ID:     postID,
+		Title:  postData.Title,
+		Text:   postData.Text,
+		IsDone: postData.IsDone,
 	}
-	return nil, nil
+
+	postInRepo := &Post{}
+	err = repo.DataDB.Find(bson.M{"ID": postID}).One(&postInRepo)
+	if err != nil {
+		log.Println("package posts, ChangePostInRepo, Find, err: ", err.Error())
+		return nil, err
+	}
+
+	changedPost.IDBson = postInRepo.IDBson
+
+	err = repo.DataDB.Update(bson.M{"ID": postID}, &changedPost)
+	if err != nil {
+		log.Println("package posts, ChangePostInRepo, Update, err: ", err.Error())
+		return nil, err
+	}
+
+	log.Printf("Post changed in repo\tbefore: %v\tafter: %v", postInRepo, changedPost)
+	return changedPost, nil
 }
 
-func AddStaticPosts() ([]*Post, error) {
+func AddStaticPostsDB(collection *mgo.Collection, sess *mgo.Session) ([]*Post, error) {
 	post1 := &Post{
 		ID:     0,
 		Title:  "Title_1",
@@ -119,6 +153,14 @@ func AddStaticPosts() ([]*Post, error) {
 	}
 	posts := []*Post{}
 	posts = append(posts, post1, post2, post3)
+
+	post1.IDBson = bson.NewObjectId()
+	post2.IDBson = bson.NewObjectId()
+	post3.IDBson = bson.NewObjectId()
+
+	collection.Insert(&post1)
+	collection.Insert(&post2)
+	collection.Insert(&post3)
 
 	return posts, nil
 }

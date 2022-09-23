@@ -6,10 +6,9 @@ SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `post_id` varchar(255) NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `text` varchar(255) NOT NULL,
-  `is_done` varchar(255) NOT NULL,
+  `user_id` varchar(255) NOT NULL,
+  `login` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

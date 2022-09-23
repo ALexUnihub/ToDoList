@@ -1,12 +1,17 @@
 package posts
 
-import "net/http"
+import (
+	"net/http"
+
+	"gopkg.in/mgo.v2/bson"
+)
 
 type Post struct {
-	ID     int    `json:"ID"`
-	Title  string `json:"Title"`
-	Text   string `json:"Text"`
-	IsDone bool   `json:"IsDone"`
+	IDBson bson.ObjectId `json:"-" bson:"_id"`
+	ID     int           `json:"ID" bson:"ID"`
+	Title  string        `json:"Title" bson:"Title"`
+	Text   string        `json:"Text" bson:"Text"`
+	IsDone bool          `json:"IsDone" bson:"IsDone"`
 }
 
 type PostsRepo interface {
